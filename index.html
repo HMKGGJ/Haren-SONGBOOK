@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="ko" class="light">
+<head>
+  <script>
+    // 모바일 리디렉션
+    if (window.innerWidth < 640 || /Mobi|Android/i.test(navigator.userAgent)) {
+      window.location.replace('mobile.html');
+    }
+  </script>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>✨ 온유ONU 노래책</title>
+  <meta name="description" content="스트리머 전용 개인 노래책 – 곡 관리 및 시청자 요청 지원"/>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@1/dist/umd/supabase.min.js"></script>
+  <script defer src="appH.js"></script>
+  <style>
+    /* 공통 Liquid Glass 클래스 */
+    .liquid-glass {
+      background: rgba(255, 255, 255, 0.3);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.4);
+      border-radius: 1rem;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+    }
+    /* 사이드바 */
+    #sidebar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 16rem;
+      height: 100%;
+      transform: translateX(-100%);
+      transition: transform 0.3s ease;
+      z-index: 40;
+      padding: 2rem 1rem;
+    }
+    #sidebar.open {
+      transform: translateX(0);
+    }
+    /* 메뉴 토글 버튼 */
+    #menu-toggle {
+      position: relative;
+      z-index: 50;
+    }
+    /* 메인 컨테이너: 사이드바 열릴 때 오른쪽으로 밀림 */
+    .main-wrapper {
+      transition: margin-left 0.3s ease;
+    }
+    .main-wrapper.shifted {
+      margin-left: 16rem;
+    }
+  </style>
+</head>
+<body class="gradient-bg text-gray-800 min-h-screen flex">
+  <!-- SIDEBAR -->
+  <aside id="sidebar" class="liquid-glass p-6 space-y-6">
+    <nav class="space-y-4">
+      <button id="view-songs" class="toggle-option active w-full text-left">🎵 노래</button>
+      <button id="view-categories" class="toggle-option inactive w-full text-left">📂 카테고리</button>
+      <button id="view-artists" class="toggle-option inactive w-full text-left">🎙️ 가수</button>
+    </nav>
+    <hr class="border-white/30"/>
+    <button id="toggle-role" class="btn-primary w-full py-2">▶ 스트리머 모드</button>
+    <div class="mt-6 space-y-2">
+      <input id="search-input" type="text" placeholder="🔍 검색..." class="input-field p-3 w-full rounded-2xl"/>
+      <button id="add-filter-button" class="btn-secondary w-full py-2">필터 추가</button>
+    </div>
+  </aside>
+
+  <!-- MAIN CONTENT -->
+  <div id="main-content" class="main-wrapper flex-1 flex flex-col">
+    <!-- HEADER -->
+    <header class="glass sticky top-0 z-30 liquid-glass">
+      <div class="container mx-auto flex items-center justify-between p-6">
+        <div class="flex items-center">
+          <button id="menu-toggle" class="p-3 mr-4 rounded-full liquid-glass hover:backdrop-blur-lg transition">
+            <!-- 햄버거 아이콘 -->
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
+            </svg>
+          </button>
+          <h1 class="main-title text-3xl font-black">✨ 온유ONU 노래책</h1>
+        </div>
+        <div class="flex items-center space-x-4">
+          <button id="theme-toggle" class="p-3 rounded-full liquid-glass hover:backdrop-blur-lg transition">
+            <span id="theme-icon" class="text-2xl">☀️</span>
+          </button>
+          <button id="view-mobile" class="btn-secondary px-4 py-2 rounded-full text-sm font-bold whitespace-nowrap">
+            📃 리스트 보기
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <main class="container mx-auto py-10 space-y-10">
+      <!-- 통계 -->
+      <section class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div class="stat-card liquid-glass p-6 rounded-3xl text-center">
+          <div class="text-3xl mb-2">🎵</div>
+          <div id="total-songs" class="text-2xl font-bold text-indigo-600">0</div>
+          <div class="text-sm text-gray-600 font-medium">총 곡수</div>
+        </div>
+        <div class="stat-card liquid-glass p-6 rounded-3xl text-center">
+          <div class="text-3xl mb-2">🎙️</div>
+          <div class="text-lg font-bold text-gray-800">신청방법: 3,000🧀</div>
+          <div class="text-lg font-bold text-gray-800">⚠️ 환불 불가 안내 ⚠️</div>
+        </div>
+        <div class="stat-card liquid-glass p-6 rounded-3xl text-center">
+          <div class="text-3xl mb-2">💣</div>
+          <div class="text-lg font-bold text-gray-800">💣곡 단가: 최소 5,000🧀</div>
+          <div class="text-lg font-bold text-gray-800">☝️ 채팅 문의 필수!</div>
+        </div>
+      </section>
+
+      <!-- 추가/수정 폼 -->
+      <section id="add-form-container" class="glass-subtle p-8 rounded-3xl shadow-lg liquid-glass" hidden>
+        <!-- (기존 폼 내용 유지) -->
+      </section>
+
+      <!-- 필터 바 (사이드바로 이동됨) -->
+
+      <!-- 곡 그리드 -->
+      <section>
+        <div id="song-grid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-8"></div>
+      </section>
+    </main>
+  </div>
+</body>
+</html>
